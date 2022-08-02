@@ -1,8 +1,8 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2022 Ilingu <ilingu@protonmail.com>
 */
-package cmd
+
+package manager
 
 import (
 	"gvm-windows/cmd/utils"
@@ -15,8 +15,8 @@ import (
 // dlCmd represents the dl command
 var dlCmd = &cobra.Command{
 	Use:   "dl",
-	Short: "dl command downloads the specified Go Version",
-	Long:  "Example: `gvm dl 1.18.4`",
+	Short: "➡️ Downloads the specified Go MSI Version",
+	Long:  "➡️ Downloads the specified Go MSI Version in the app 'AppData' Dir, for later use.",
 	Run: func(cmd *cobra.Command, args []string) {
 		if !utils.IsArgsValids(args) {
 			cmd.Help()
@@ -27,26 +27,16 @@ var dlCmd = &cobra.Command{
 		// Downloading go
 		log.Printf("Downloading go%s... ⏳\n", version)
 		Godl := gvm.MakeGoDownloader(version)
-		dlPath, ok := Godl.DownloadSource()
+		dlPath, ok := Godl.DownloadMSI()
 		if !ok {
 			log.Printf("Failed to download go%s ❌\n", version)
 			return
 		}
 		log.Printf("go%s Downloaded Successfully ✅: %s\n", version, dlPath)
-
-		log.Printf("Bundling go%s... ⏳\n", version)
-		GoInstaller := gvm.MakeGoInstaller(dlPath, version)
-		ok = GoInstaller.InstallAsSource()
-		if !ok {
-			log.Printf("Failed to bundle go%s ❌\n", version)
-			return
-		}
-
-		log.Printf("You can now execute `gvm use %s` to enable this version\n", version)
+		log.Printf("You can now execute `gvm manager use %s` to enable this version\n", version)
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(dlCmd)
 	// goroot := *dlCmd.Flags().String("goroot", `C:\Program Files\Go`, "Custom GOROOT path, default: C:\\Program Files\\Go ")
 }

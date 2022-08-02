@@ -5,11 +5,11 @@ import (
 	"compress/gzip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"strings"
 )
 
 func GetUserDir() (string, error) {
@@ -27,7 +27,7 @@ func GenerateAppDataPath() (string, error) {
 		return "", err
 	}
 
-	appData := fmt.Sprintf("%s/AppData/Roaming/gvm-windows", homeDir)
+	appData := fmt.Sprintf("%s\\AppData\\Roaming\\gvm-windows", homeDir)
 	err = os.MkdirAll(appData, os.ModePerm)
 	if err != nil {
 		return "", err
@@ -61,6 +61,7 @@ func Untar(from, dst string) error {
 	}
 	defer reader.Close()
 
+	// UnGzip
 	gzr, err := gzip.NewReader(reader)
 	if err != nil {
 		return err
@@ -83,7 +84,7 @@ func Untar(from, dst string) error {
 		}
 
 		// the target location where the dir/file should be created
-		target := filepath.Join(dst, header.Name)
+		target := filepath.Join(dst, strings.Replace(header.Name, "go/", "", 1))
 
 		// check the file type
 		switch header.Typeflag {
@@ -99,7 +100,6 @@ func Untar(from, dst string) error {
 		case tar.TypeReg:
 			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
 			if err != nil {
-				log.Println(err)
 				return err
 			}
 

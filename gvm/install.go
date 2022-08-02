@@ -1,7 +1,6 @@
 package gvm
 
 import (
-	"fmt"
 	"gvm-windows/gvm/utils"
 	"log"
 	"os"
@@ -9,12 +8,11 @@ import (
 )
 
 type goInstaller struct {
-	path    string
-	version string
+	path string
 }
 
-func MakeGoInstaller(path, v string) goInstaller {
-	return goInstaller{path: path, version: v}
+func MakeGoInstaller(path string) goInstaller {
+	return goInstaller{path: path}
 }
 
 func (it goInstaller) InstallAsMSI() bool {
@@ -25,25 +23,17 @@ func (it goInstaller) InstallAsMSI() bool {
 }
 
 func (it goInstaller) InstallAsSource() bool {
-	// defer os.Remove(it.path) // Remove first
-	appDir, err := utils.GenerateAppDataPath()
+	err := os.Chdir(it.path + "\\src") // Change dir to be inside Go Installer
 	if err != nil {
 		return false
 	}
 
-	GoRootFolder := appDir + fmt.Sprintf("/go%s", it.version)
-	err = os.Mkdir(GoRootFolder, os.ModePerm)
-	if !os.IsExist(err) && err != nil {
-		return false
-	}
-
-	err = utils.Untar(it.path, GoRootFolder) // Untar the file, and put it in the right dir
+	output, err := utils.ExecCmdWithStdOut(exec.Command("all.bat"))
 	if err != nil {
 		log.Println(err)
 		return false
 	}
-
-	// utils.ExecCmdWithStdOut(exec.Command(""))
+	log.Println(output)
 
 	return true
 }

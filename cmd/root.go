@@ -1,10 +1,11 @@
 /*
-Copyright © 2022 NAME HERE <EMAIL ADDRESS>
-
+Copyright © 2022 Ilingu <ilingu@protonmail.com>
 */
+
 package cmd
 
 import (
+	"gvm-windows/cmd/manager"
 	"log"
 	"runtime"
 
@@ -34,5 +35,5 @@ func Execute() {
 }
 
 func init() {
-
+	rootCmd.AddCommand(manager.ManagerCmds)
 }
