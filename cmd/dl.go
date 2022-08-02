@@ -6,6 +6,8 @@ package cmd
 
 import (
 	"gvm-windows/cmd/utils"
+	"gvm-windows/gvm"
+	"log"
 
 	"github.com/spf13/cobra"
 )
@@ -20,6 +22,27 @@ var dlCmd = &cobra.Command{
 			cmd.Help()
 			return
 		}
+		version := args[0]
+
+		// Downloading go
+		log.Printf("Downloading go%s... ⏳\n", version)
+		Godl := gvm.MakeGoDownloader(version)
+		dlPath, ok := Godl.DownloadSource()
+		if !ok {
+			log.Printf("Failed to download go%s ❌\n", version)
+			return
+		}
+		log.Printf("go%s Downloaded Successfully ✅: %s\n", version, dlPath)
+
+		log.Printf("Bundling go%s... ⏳\n", version)
+		GoInstaller := gvm.MakeGoInstaller(dlPath, version)
+		ok = GoInstaller.InstallAsSource()
+		if !ok {
+			log.Printf("Failed to bundle go%s ❌\n", version)
+			return
+		}
+
+		log.Printf("You can now execute `gvm use %s` to enable this version\n", version)
 	},
 }
 

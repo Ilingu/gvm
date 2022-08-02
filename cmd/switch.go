@@ -44,7 +44,7 @@ var switchCmd = &cobra.Command{
 		log.Printf("go%s Downloaded Successfully ✅: %s\n", version, dlPath)
 
 		log.Printf("Installing go%s... ⏳\n", version)
-		GoInstaller := gvm.MakeGoInstaller(dlPath)
+		GoInstaller := gvm.MakeGoInstaller(dlPath, version)
 		ok = GoInstaller.InstallAsMSI()
 		if !ok {
 			log.Printf("Failed to install go%s ❌\n", version)
