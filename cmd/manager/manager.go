@@ -21,4 +21,5 @@ var ManagerCmds = &cobra.Command{
 func init() {
 	ManagerCmds.AddCommand(dlCmd)
 	ManagerCmds.AddCommand(useCmd)
+	ManagerCmds.AddCommand(scanCmd)
 }

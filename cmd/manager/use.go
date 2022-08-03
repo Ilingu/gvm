@@ -19,8 +19,7 @@ import (
 var useCmd = &cobra.Command{
 	Use:   "use",
 	Short: "➡️ Switch between multiples version of Go",
-	Long: `➡️ Switch between multiples version of Go.
-	Download source version if not already downloaded (@see the 'dl' command). It then change your GOROOT to the downloaded package, bundles/installs it.`,
+	Long:  `➡️ Switch between multiples version of Go. If the specified Go Version is not downloaded the process exit.`,
 	Run: func(cmd *cobra.Command, args []string) {
 		if !utils.IsArgsValids(args) {
 			cmd.Help()
@@ -31,6 +30,15 @@ var useCmd = &cobra.Command{
 		appFolder, err := gvmUtils.GenerateAppDataPath()
 		if err != nil {
 			return
+		}
+
+		if version == "latest" {
+			latestVersion, ok := utils.GetLatestGoVersion()
+			if !ok {
+				log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
+				return
+			}
+			version = latestVersion
 		}
 
 		GoMsiExecutable := appFolder + fmt.Sprintf("\\go%s.msi", version)

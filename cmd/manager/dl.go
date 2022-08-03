@@ -24,6 +24,16 @@ var dlCmd = &cobra.Command{
 		}
 		version := args[0]
 
+		// Check latest Version
+		if version == "latest" {
+			latestVersion, ok := utils.GetLatestGoVersion()
+			if !ok {
+				log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
+				return
+			}
+			version = latestVersion
+		}
+
 		// Downloading go
 		log.Printf("Downloading go%s... ⏳\n", version)
 		Godl := gvm.MakeGoDownloader(version)

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"gvm-windows/gvm/utils"
 	"io"
-	"log"
 	"net/http"
 	"os"
 )
@@ -56,13 +55,10 @@ func (v goDownloader) DownloadMSI() (string, bool) {
 	}
 
 	file, err := os.Create(appFolder + fmt.Sprintf("\\go%s.msi", v.version))
-	if os.IsExist(err) {
-		log.Println("❌ This Go Version is already installated")
-		return "", false
-	} else if err != nil {
-		log.Println(err)
+	if err != nil {
 		return "", false
 	}
+	defer file.Close()
 
 	// Populate file with the Go Executable
 	_, err = io.Copy(file, resp.Body)
