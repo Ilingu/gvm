@@ -48,5 +48,4 @@ var dlCmd = &cobra.Command{
 }
 
 func init() {
-	// goroot := *dlCmd.Flags().String("goroot", `C:\Program Files\Go`, "Custom GOROOT path, default: C:\\Program Files\\Go ")
 }

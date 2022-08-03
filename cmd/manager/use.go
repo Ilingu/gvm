@@ -11,6 +11,7 @@ import (
 	gvmUtils "gvm-windows/gvm/utils"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -26,38 +27,45 @@ var useCmd = &cobra.Command{
 			return
 		}
 
-		version := args[0]
-		appFolder, err := gvmUtils.GenerateAppDataPath()
-		if err != nil {
-			return
-		}
+		targetVersion := args[0]
+		UserGoVersion, _ := utils.GetUserGoVersion()
 
-		if version == "latest" {
+		if targetVersion == "latest" {
 			latestVersion, ok := utils.GetLatestGoVersion()
 			if !ok {
 				log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
 				return
 			}
-			version = latestVersion
+			targetVersion = latestVersion
 		}
 
-		GoMsiExecutable := appFolder + fmt.Sprintf("\\go%s.msi", version)
-
-		fileInfo, err := os.Stat(GoMsiExecutable)
-		if os.IsNotExist(err) || err != nil || fileInfo.IsDir() {
-			log.Printf("❌ This Go Version is not downloaded on your machine!\nType: `gvm manager dl %s` to download this version", version)
+		// Check Version
+		if strings.Contains(UserGoVersion, targetVersion) {
+			log.Printf("You are already on go%s ❌\n", targetVersion)
 			return
 		}
 
-		log.Printf("Switching to go%s... ⏳\n", version)
+		appFolder, err := gvmUtils.GenerateAppDataPath()
+		if err != nil {
+			return
+		}
+
+		GoMsiExecutable := appFolder + fmt.Sprintf("\\go%s.msi", targetVersion)
+		fileInfo, err := os.Stat(GoMsiExecutable)
+		if os.IsNotExist(err) || err != nil || fileInfo.IsDir() {
+			log.Printf("❌ This Go Version is not downloaded on your machine!\nType: `gvm manager dl %s` to download this version", targetVersion)
+			return
+		}
+
+		log.Printf("Switching to go%s... ⏳\n", targetVersion)
 		GoInstaller := gvm.MakeGoInstaller(GoMsiExecutable)
 		ok := GoInstaller.InstallAsMSI()
 		if !ok {
-			log.Printf("Failed to switch to go%s ❌\n", version)
+			log.Printf("Failed to switch to go%s ❌\n", targetVersion)
 			return
 		}
 
-		log.Printf("Switched to go%s Successfully ✅\n", version)
+		log.Printf("Switched to go%s Successfully ✅\n", targetVersion)
 	},
 }
 

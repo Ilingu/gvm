@@ -39,6 +39,15 @@ func GetGOROOT() (string, bool) {
 	return goroot, true
 }
 
+func GetUserGoVersion() (string, bool) {
+	goversion, err := utils.ExecCmdWithStdOut(exec.Command("go", "env", "GOVERSION"))
+	if err != nil || goversion == "" {
+		return "", false
+	}
+
+	return goversion, true
+}
+
 func GetLatestGoVersion() (string, bool) {
 	resp, err := http.Get("https://go.dev/VERSION?m=text") // Get Version Info from Go Official Website
 	if err != nil {

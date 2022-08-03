@@ -12,7 +12,6 @@ import (
 	gvmUtils "gvm-windows/gvm/utils"
 	"log"
 	"os"
-	"runtime"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -28,23 +27,25 @@ var switchCmd = &cobra.Command{
 			cmd.Help()
 			return
 		}
-		version := args[0]
+
+		targetVersion := args[0]
+		UserGoVersion, _ := utils.GetUserGoVersion()
 
 		latestVersion, ok := utils.GetLatestGoVersion()
-		if version == "latest" && !ok {
+		if targetVersion == "latest" && !ok {
 			log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
 			return
 		}
 
-		if version == "latest" {
-			version = latestVersion
-		} else if runtime.Version() != "go"+latestVersion {
-			log.Printf("❕ Go's latest version is %s, you're currently in %s", latestVersion, runtime.Version())
+		if targetVersion == "latest" {
+			targetVersion = latestVersion
+		} else if UserGoVersion != "go"+latestVersion {
+			log.Printf("❕ Go's latest version is %s, you're currently in %s", latestVersion, UserGoVersion)
 		}
 
 		// Check Version
-		if strings.Contains(runtime.Version(), version) {
-			log.Printf("You are already on go%s ❌\n", version)
+		if strings.Contains(UserGoVersion, targetVersion) {
+			log.Printf("You are already on go%s ❌\n", targetVersion)
 			return
 		}
 
@@ -54,10 +55,10 @@ var switchCmd = &cobra.Command{
 			return
 		}
 
-		GoMsiExecutable, ok := appFolder+fmt.Sprintf("\\go%s.msi", version), false
-		Godl := gvm.MakeGoDownloader(version)
+		GoMsiExecutable, ok := appFolder+fmt.Sprintf("\\go%s.msi", targetVersion), false
+		Godl := gvm.MakeGoDownloader(targetVersion)
 		downloadGo := func() error {
-			log.Printf("Downloading go%s... ⏳ (no-cache=%t)\n", version, temp)
+			log.Printf("Downloading go%s... ⏳ (no-cache=%t)\n", targetVersion, temp)
 
 			if temp {
 				GoMsiExecutable, ok = Godl.DownloadTempMSI()
@@ -66,11 +67,11 @@ var switchCmd = &cobra.Command{
 			}
 
 			if !ok {
-				log.Printf("Failed to download go%s ❌\n", version)
+				log.Printf("Failed to download go%s ❌\n", targetVersion)
 				return errors.New("")
 			}
 
-			log.Printf("go%s Downloaded Successfully ✅: %s\n", version, GoMsiExecutable)
+			log.Printf("go%s Downloaded Successfully ✅: %s\n", targetVersion, GoMsiExecutable)
 			return nil
 		}
 
@@ -87,16 +88,16 @@ var switchCmd = &cobra.Command{
 			defer os.Remove(GoMsiExecutable) // Remove Temp File
 		}
 
-		log.Printf("Installing go%s... ⏳\n", version)
+		log.Printf("Installing go%s... ⏳\n", targetVersion)
 		GoInstaller := gvm.MakeGoInstaller(GoMsiExecutable)
 		ok = GoInstaller.InstallAsMSI()
 		if !ok {
-			log.Printf("Failed to install go%s ❌\n", version)
+			log.Printf("Failed to install go%s ❌\n", targetVersion)
 			os.Remove(GoMsiExecutable) // Remove Corrupted File
 			return
 		}
 
-		log.Printf("go%s Installed Successfully ✅\n", version)
+		log.Printf("go%s Installed Successfully ✅\n", targetVersion)
 	},
 }
 
