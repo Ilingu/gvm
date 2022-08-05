@@ -4,11 +4,13 @@ import (
 	"gvm-windows/gvm/utils"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 )
 
 var wg sync.WaitGroup
 
+// scan the app folder to find expire msi files and then deletes it
 func ScanAndDelete(limitDate int64) (int, error) {
 	appDir, err := utils.GenerateAppDataPath()
 	if err != nil {
@@ -31,7 +33,7 @@ func ScanAndDelete(limitDate int64) (int, error) {
 			continue
 		}
 
-		if fileInfo.ModTime().UnixMilli() <= limitDate {
+		if ((utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".txt")) || (!utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".msi"))) && fileInfo.ModTime().UnixMilli() <= limitDate {
 			wg.Add(1)
 			filesDeleted++
 			go func() {

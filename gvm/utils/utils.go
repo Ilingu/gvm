@@ -12,6 +12,7 @@ import (
 	"strings"
 )
 
+// returns the User's Home Directory (%USERPROFILE%)
 func GetUserDir() (string, error) {
 	sessionUser, err := user.Current()
 	if err != nil {
@@ -21,6 +22,7 @@ func GetUserDir() (string, error) {
 	return sessionUser.HomeDir, nil
 }
 
+// returns the CLI directory to cache MSI version (in AppData)
 func GenerateAppDataPath() (string, error) {
 	homeDir, err := GetUserDir()
 	if err != nil {
@@ -36,14 +38,17 @@ func GenerateAppDataPath() (string, error) {
 	return appData, nil
 }
 
+// Generate the download url of the Go MSI
 func GenerateWinDownloadUrl(v string) string {
 	return fmt.Sprintf("https://go.dev/dl/go%s.windows-amd64.msi", v)
 }
 
+// Generate the download url of Go Source
 func GenerateSourceDownloadUrl(v string) string {
 	return fmt.Sprintf("https://go.dev/dl/go%s.src.tar.gz", v)
 }
 
+// Execute a command and returns it output
 func ExecCmdWithStdOut(cmd *exec.Cmd) (string, error) {
 	res, err := cmd.Output()
 	if err != nil {
@@ -98,9 +103,9 @@ func Untar(from, dst string) error {
 
 		// if it's a file create it
 		case tar.TypeReg:
-			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode))
+			f, err := os.OpenFile(target, os.O_CREATE|os.O_RDWR, os.FileMode(header.Mode)) // if there is a root parent, this will not create it and it will result in a error (like: "path doesn't exist") (1/2)
 			if err != nil {
-				return err
+				return err // to avoid that you'll have to MkdirAll before (2/2)
 			}
 
 			// copy over contents
@@ -113,4 +118,9 @@ func Untar(from, dst string) error {
 			f.Close()
 		}
 	}
+}
+
+// return true if the calling environnement is a test env
+func IsTestEnv() bool {
+	return os.Getenv("TEST") == "1"
 }

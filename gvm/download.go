@@ -12,10 +12,12 @@ type goDownloader struct {
 	version string
 }
 
+// Create a Go Downloader given the wanted version to download, it return a Go<Version>Downloader
 func MakeGoDownloader(v string) goDownloader {
 	return goDownloader{version: v}
 }
 
+// Download the Go version MSI file from the Go Official Website, but doesn't cache it (stored in "/temp" dir)
 func (v goDownloader) DownloadTempMSI() (string, bool) {
 	goVersionLink := utils.GenerateWinDownloadUrl(v.version)
 	resp, err := http.Get(goVersionLink) // Get from Go Official Website
@@ -40,6 +42,7 @@ func (v goDownloader) DownloadTempMSI() (string, bool) {
 	return file.Name(), true
 }
 
+// Download the Go version MSI file from the Go Official Website, and cache it in the app directory (for future use)
 func (v goDownloader) DownloadMSI() (string, bool) {
 	goVersionLink := utils.GenerateWinDownloadUrl(v.version)
 	resp, err := http.Get(goVersionLink) // Get from Go Official Website
@@ -54,7 +57,14 @@ func (v goDownloader) DownloadMSI() (string, bool) {
 		return "", false
 	}
 
-	file, err := os.Create(appFolder + fmt.Sprintf("\\go%s.msi", v.version))
+	var fileDst = appFolder
+	if utils.IsTestEnv() {
+		fileDst += fmt.Sprintf("\\go%s-test.msi", v.version)
+	} else {
+		fileDst += fmt.Sprintf("\\go%s.msi", v.version)
+	}
+
+	file, err := os.Create(fileDst)
 	if err != nil {
 		return "", false
 	}
@@ -67,19 +77,4 @@ func (v goDownloader) DownloadMSI() (string, bool) {
 	}
 
 	return file.Name(), true
-	// Extract File
-	// defer os.Remove(path) // Second Remove .tar.gz file
-	// defer file.Close()    // First Close .tar.gz file
-
-	// GoRootFolder := appFolder + fmt.Sprintf("\\go%s", v.version)
-	// err = os.Mkdir(GoRootFolder, os.ModePerm)
-	// if !os.IsExist(err) && err != nil {
-	// 	return "", false
-	// }
-
-	// log.Println("Almost There! Extracting Go Files...")
-	// err = utils.Untar(path, GoRootFolder) // Untar the file, and put it in the right dir
-	// if err != nil {
-	// 	return "", false
-	// }
 }
