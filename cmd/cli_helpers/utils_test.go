@@ -1,8 +1,7 @@
-package utils
+package cli_helpers
 
 import (
 	"os"
-	"runtime"
 	"testing"
 )
 
@@ -34,32 +33,6 @@ func TestIsArgsValids(t *testing.T) {
 		if out != test.expected {
 			t.Errorf("Test #%d\ngot: %t\nwant: %t", i, out, test.expected)
 		}
-	}
-}
-
-func TestGetGOROOT(t *testing.T) {
-	os.Setenv("TEST", "1")
-
-	goroot, ok := GetGOROOT()
-	if !ok {
-		t.Fatal("couldn't get goroot")
-	}
-
-	if goroot != `C:\Program Files\Go` {
-		t.Fatalf("\ngot: %s\nwant: %s", goroot, `C:\Program Files\Go`)
-	}
-}
-
-func TestGetUserGoVersion(t *testing.T) {
-	os.Setenv("TEST", "1")
-
-	goversion, ok := GetUserGoVersion()
-	if !ok {
-		t.Fatal("couldn't get goversion")
-	}
-
-	if goversion != runtime.Version() {
-		t.Fatalf("\ngot: %s\nwant: %s", goversion, runtime.Version())
 	}
 }
 

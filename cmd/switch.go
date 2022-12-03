@@ -5,14 +5,13 @@ Copyright © 2022 Ilingu <ilingu@protonmail.com>
 package cmd
 
 import (
-	"errors"
 	"fmt"
-	"gvm-windows/cmd/utils"
-	"gvm-windows/gvm"
-	gvmUtils "gvm-windows/gvm/utils"
-	"log"
+	appos "gvm/app_os"
+	cobra_helpers "gvm/cmd/cli_helpers"
+	"gvm/console"
+	"gvm/gvm"
+	"gvm/utils"
 	"os"
-	"strings"
 
 	"github.com/spf13/cobra"
 )
@@ -23,7 +22,7 @@ var switchCmd = &cobra.Command{
 	Short: "➡️ Let you switch of Go version easily (recommended).",
 	Long:  "➡️ Let you switch of Go Main Version easily: uses the Go MSI executable (recommended for windows).\nIt Downloads the msi executable from Go Official Website if not already downloaded, then it uninstalls the current Go version and finally it installs the newly/already downloaded Go version.\nTIP: use 'latest' arg to download latest go version",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !utils.IsArgsValids(args) {
+		if !cobra_helpers.IsArgsValids(args) {
 			cmd.Help()
 			return
 		}
@@ -31,73 +30,84 @@ var switchCmd = &cobra.Command{
 		targetVersion := args[0]
 		UserGoVersion, _ := utils.GetUserGoVersion()
 
-		latestVersion, ok := utils.GetLatestGoVersion()
+		latestVersion, ok := cobra_helpers.GetLatestGoVersion()
 		if targetVersion == "latest" && !ok {
-			log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
+			console.Error("❌ Cannot fetch latest Go Version. Check your internet connection!")
 			return
 		}
 
 		if targetVersion == "latest" {
 			targetVersion = latestVersion
 		} else if UserGoVersion != "go"+latestVersion {
-			log.Printf("❕ Go's latest version is %s, you're currently in %s", latestVersion, UserGoVersion)
+			console.Warn(fmt.Sprintf("❕ Go's latest version is %s, you're currently in %s", latestVersion, UserGoVersion))
 		}
 
 		// Check Version
-		if strings.Contains(UserGoVersion, targetVersion) {
-			log.Printf("You are already on go%s ❌\n", targetVersion)
+		if UserGoVersion == "go"+targetVersion {
+			console.Error(fmt.Sprintf("You are already on go%s ❌\n", targetVersion))
 			return
 		}
 
 		// Get Cache
-		appFolder, err := gvmUtils.GenerateAppDataPath()
+		appFolder, err := utils.GenerateAppDataPath()
 		if err != nil {
+			console.Error("You have no Home path")
 			return
 		}
 
-		GoMsiExecutable, ok := appFolder+fmt.Sprintf("\\go%s.msi", targetVersion), false
+		var GoCachePath string
+
 		Godl := gvm.MakeGoDownloader(targetVersion)
-		downloadGo := func() error {
-			log.Printf("Downloading go%s... ⏳ (no-cache=%t)\n", targetVersion, temp)
+		var GoInstaller appos.GoInstaller
 
-			if temp {
-				GoMsiExecutable, ok = Godl.DownloadTempMSI()
-			} else {
-				GoMsiExecutable, ok = Godl.DownloadMSI()
-			}
-
-			if !ok {
-				log.Printf("Failed to download go%s ❌\n", targetVersion)
-				return errors.New("")
-			}
-
-			log.Printf("go%s Downloaded Successfully ✅: %s\n", targetVersion, GoMsiExecutable)
-			return nil
-		}
-
-		fileInfo, err := os.Stat(GoMsiExecutable)
-		if !temp && (os.IsNotExist(err) || err != nil || fileInfo.IsDir()) {
-			log.Println("❌ This Go Version is not downloaded on your machine!")
-			if downloadGo() != nil {
-				return
-			}
-		} else if temp {
-			if downloadGo() != nil {
-				return
-			}
-			defer os.Remove(GoMsiExecutable) // Remove Temp File
-		}
-
-		log.Printf("Installing go%s... ⏳\n", targetVersion)
-		GoInstaller := gvm.MakeGoInstaller(GoMsiExecutable)
-		ok = GoInstaller.InstallAsMSI()
-		if !ok {
-			log.Printf("Failed to install go%s ❌\n", targetVersion)
-			os.Remove(GoMsiExecutable) // Remove Corrupted File
+		err = appos.ExecAccording(
+			func() { GoCachePath = appFolder + fmt.Sprintf("/go%s.tar.gz", targetVersion) }, // Linux
+			func() { GoCachePath = appFolder + fmt.Sprintf("/go%s.msi", targetVersion) },    // Windows
+		)
+		if err != nil {
+			console.Error(err.Error())
 			return
 		}
 
-		log.Printf("go%s Installed Successfully ✅\n", targetVersion)
+		if temp {
+			console.Log(fmt.Sprintf("Downloading go%s... ⏳ (no-cache=%t)\n", targetVersion, temp))
+			GoInstaller, err = Godl.DownloadInTemp()
+			if err != nil {
+				console.Error(fmt.Sprintf("Failed to download go%s ❌\n", targetVersion))
+				return
+			}
+			console.Success(fmt.Sprintf("go%s Downloaded Successfully ✅: %s\n", targetVersion, GoCachePath))
+		}
+
+		// Check if file cached, if not download it
+		fileInfo, err := os.Stat(GoCachePath)
+		if !temp && (os.IsNotExist(err) || err != nil || fileInfo.IsDir()) {
+			console.Warn("This Go Version is not downloaded on your machine!")
+			console.Log(fmt.Sprintf("Downloading go%s... ⏳ (no-cache=%t)\n", targetVersion, temp))
+
+			GoInstaller, err = Godl.DownloadInCache()
+			if err != nil {
+				console.Error(fmt.Sprintf("Failed to download go%s ❌, %s\n", targetVersion, err))
+				return
+			}
+			console.Success(fmt.Sprintf("go%s Downloaded Successfully ✅: %s\n", targetVersion, GoCachePath))
+		} else if !temp {
+			GoInstaller = gvm.MakeGoInstaller(GoCachePath, targetVersion)
+		}
+
+		console.Log(fmt.Sprintf("Installing go%s... ⏳\n", targetVersion))
+		if GoInstaller == nil {
+			console.Error("No default installer, failed")
+		}
+
+		err = GoInstaller.Install()
+		if err != nil {
+			console.Error(fmt.Sprintf("Failed to install go%s ❌\n", targetVersion))
+			os.Remove(GoCachePath) // Remove Corrupted File
+			return
+		}
+
+		console.Success(fmt.Sprintf("go%s Installed Successfully ✅\n", targetVersion))
 	},
 }
 

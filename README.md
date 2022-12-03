@@ -1,6 +1,6 @@
-# GVM For Windows 🪟
+# GVM
 
-#### ➡️ Go Version Manager, only for windows
+#### ➡️ Go Version Manager, <s>only for windows</s>
 
 ## 📕 Purpose:
 

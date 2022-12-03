@@ -1,4 +1,4 @@
-package utils
+package linux_gvm
 
 import (
 	"io"
@@ -7,54 +7,7 @@ import (
 	"testing"
 )
 
-func TestGetUserDir(t *testing.T) {
-	os.Setenv("TEST", "1")
-
-	homeDir, err := GetUserDir()
-	if err != nil {
-		t.Fatal("couldn't get user's home dir", err)
-	}
-
-	if homeDir != `C:\Users\Iling` {
-		t.Fatalf("\ngot: %s\nwant: %s", homeDir, `C:\Users\Iling`)
-	}
-}
-
-func TestGenerateAppDataPath(t *testing.T) {
-	os.Setenv("TEST", "1")
-
-	appDir, err := GenerateAppDataPath()
-	if err != nil {
-		t.Fatal("couldn't get appDir", err)
-	}
-
-	expected := `C:\Users\Iling\AppData\Roaming\gvm-windows`
-	if appDir != expected {
-		t.Fatalf("\ngot: %s\nwant: %s", appDir, expected)
-	}
-}
-
-func TestGenerateWinDownloadUrl(t *testing.T) {
-	os.Setenv("TEST", "1")
-
-	testCase := []struct {
-		input    string
-		expected string
-	}{
-		{input: "1.19", expected: "https://go.dev/dl/go1.19.windows-amd64.msi"},
-		{input: "1.18.5", expected: "https://go.dev/dl/go1.18.5.windows-amd64.msi"},
-		{input: "something", expected: "https://go.dev/dl/gosomething.windows-amd64.msi"},
-	}
-
-	for _, test := range testCase {
-		out := GenerateWinDownloadUrl(test.input)
-		if out != test.expected {
-			t.Errorf("\ngot: %s\nwant: %s\n", out, test.expected)
-		}
-	}
-}
-
-func TestGenerateSourceDownloadUrl(t *testing.T) {
+func TestGenerateLinuxDownloadUrl(t *testing.T) {
 	os.Setenv("TEST", "1")
 
 	testCase := []struct {
@@ -67,19 +20,19 @@ func TestGenerateSourceDownloadUrl(t *testing.T) {
 	}
 
 	for _, test := range testCase {
-		out := GenerateSourceDownloadUrl(test.input)
+		out := generateLinuxDownloadUrl(test.input)
 		if out != test.expected {
 			t.Errorf("\ngot: %s\nwant: %s\n", out, test.expected)
 		}
 	}
 }
 
-// Test Cmd (no timeout + no cache) --> go test -run ^TestUntar$ gvm-windows/gvm/utils -v -count=1
+// Test Cmd (no timeout + no cache) --> go test -run ^TestUntar$ gvmgvm/utils -v -count=1
 func TestUntar(t *testing.T) {
 	os.Setenv("TEST", "1")
 
 	// Mock (prepare the ground)
-	GoOneDotNineteenUrl := GenerateSourceDownloadUrl("1.19")
+	GoOneDotNineteenUrl := generateLinuxDownloadUrl("1.19")
 	resp, err := http.Get(GoOneDotNineteenUrl)
 	if err != nil {
 		t.Fatal("Couldn't fetch source: ", err)
@@ -109,18 +62,18 @@ func TestUntar(t *testing.T) {
 	t.Logf("temp dir: %s", dirPath)
 
 	// Actual Test
-	err = Untar(tempFile.Name(), dirPath)
+	err = untar(tempFile.Name(), dirPath)
 	if err != nil {
 		t.Fatal("Couldn't untar file: ", err)
 	}
 
 	// See If untar really succeed
-	fileInfo, err := os.Stat(dirPath + "\\VERSION")
+	fileInfo, err := os.Stat(dirPath + "/VERSION")
 	if os.IsNotExist(err) || err != nil || fileInfo.IsDir() {
 		t.Fatal("Couldn't find version file: ", err)
 	}
 
-	versionFile, err := os.Open(dirPath + "\\VERSION")
+	versionFile, err := os.Open(dirPath + "/VERSION")
 	if err != nil {
 		t.Fatal("Couldn't find version file: ", err)
 	}
@@ -133,12 +86,5 @@ func TestUntar(t *testing.T) {
 
 	if version != "go1.19" {
 		t.Errorf("\ngot: %s\nwant: %s\n", version, "go1.19")
-	}
-}
-
-func TestIsTestEnv(t *testing.T) {
-	os.Setenv("TEST", "1")
-	if !IsTestEnv() {
-		t.Fatal("failed, expected true, got false")
 	}
 }

@@ -1,10 +1,8 @@
-package utils
+package cli_helpers
 
 import (
-	"gvm-windows/gvm/utils"
 	"io"
 	"net/http"
-	"os/exec"
 	"regexp"
 	"strings"
 )
@@ -20,26 +18,6 @@ func IsArgsValids(args []string) bool {
 
 	checkArgShape := regexp.MustCompile(`^[0-9]+\.[0-9]+(?:\.[0-9]+)?$`)
 	return checkArgShape.MatchString(args[0])
-}
-
-// Gets the User's GOROOT. It uses `go env GOROOT` to get that.
-func GetGOROOT() (string, bool) {
-	goroot, err := utils.ExecCmdWithStdOut(exec.Command("go", "env", "GOROOT"))
-	if err != nil || goroot == "" {
-		return "", false
-	}
-
-	return strings.ReplaceAll(goroot, "\n", ""), true
-}
-
-// Gets the User's Current Installed version of Go. It uses `go env GOVERSION` to get that. Note that it returns the version in this format: `gox.y.z`, e.g: "go1.19" or "go1.18.5"...
-func GetUserGoVersion() (string, bool) {
-	goversion, err := utils.ExecCmdWithStdOut(exec.Command("go", "env", "GOVERSION"))
-	if err != nil || goversion == "" {
-		return "", false
-	}
-
-	return strings.ReplaceAll(goversion, "\n", ""), true
 }
 
 // It will go get the latest official release of Go from the Go Website (https://go.dev).

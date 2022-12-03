@@ -1,8 +1,13 @@
-GVM_BINARY=gvm.exe
+build: bwin blinux
 
-build:
-	@echo Building App binary...
-	set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o ${GVM_BINARY} .
+bwin:
+	@echo Building App binary for windows...
+	set GOOS=windows&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o gvm.exe .
+	@echo Done!
+
+blinux:
+	@echo Building App binary for linux...
+	set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o gvm-linux .
 	@echo Done!
 
 test_switch: build

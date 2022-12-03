@@ -4,7 +4,7 @@ Copyright © 2022 Ilingu <ilingu@protonmail.com>
 
 package main
 
-import "gvm-windows/cmd"
+import cmd "gvm/cmd"
 
 func main() {
 	cmd.Execute()

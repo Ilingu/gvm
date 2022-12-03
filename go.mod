@@ -1,4 +1,4 @@
-module gvm-windows
+module gvm
 
 go 1.18
 

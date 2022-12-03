@@ -5,9 +5,10 @@ Copyright © 2022 Ilingu <ilingu@protonmail.com>
 package manager
 
 import (
-	"gvm-windows/cmd/utils"
-	"gvm-windows/gvm"
-	"log"
+	"fmt"
+	"gvm/cmd/cli_helpers"
+	"gvm/console"
+	"gvm/gvm"
 
 	"github.com/spf13/cobra"
 )
@@ -18,7 +19,7 @@ var dlCmd = &cobra.Command{
 	Short: "➡️ Downloads the specified Go MSI Version",
 	Long:  "➡️ Downloads the specified Go MSI Version in the app 'AppData' Dir, for later use.",
 	Run: func(cmd *cobra.Command, args []string) {
-		if !utils.IsArgsValids(args) {
+		if !cli_helpers.IsArgsValids(args) {
 			cmd.Help()
 			return
 		}
@@ -26,24 +27,24 @@ var dlCmd = &cobra.Command{
 
 		// Check latest Version
 		if version == "latest" {
-			latestVersion, ok := utils.GetLatestGoVersion()
+			latestVersion, ok := cli_helpers.GetLatestGoVersion()
 			if !ok {
-				log.Println("❌ Cannot fetch latest Go Version. Check your internet connection!")
+				console.Error("❌ Cannot fetch latest Go Version. Check your internet connection!")
 				return
 			}
 			version = latestVersion
 		}
 
 		// Downloading go
-		log.Printf("Downloading go%s... ⏳\n", version)
+		console.Log(fmt.Sprintf("Downloading go%s... ⏳\n", version))
 		Godl := gvm.MakeGoDownloader(version)
-		dlPath, ok := Godl.DownloadMSI()
-		if !ok {
-			log.Printf("Failed to download go%s ❌\n", version)
+		dlPath, err := Godl.DownloadInCache()
+		if err != nil {
+			console.Error(fmt.Sprintf("Failed to download go%s ❌\n", version))
 			return
 		}
-		log.Printf("go%s Downloaded Successfully ✅: %s\n", version, dlPath)
-		log.Printf("You can now execute `gvm manager use %s` to enable this version\n", version)
+		console.Success(fmt.Sprintf("go%s Downloaded Successfully ✅: %s\n", version, dlPath))
+		console.Log(fmt.Sprintf("You can now execute `gvm manager use %s` to enable this version\n", version))
 	},
 }
 

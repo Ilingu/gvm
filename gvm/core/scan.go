@@ -1,7 +1,7 @@
-package gvm
+package core
 
 import (
-	"gvm-windows/gvm/utils"
+	utils "gvm/utils"
 	"os"
 	"path/filepath"
 	"strings"
@@ -33,7 +33,7 @@ func ScanAndDelete(limitDate int64) (int, error) {
 			continue
 		}
 
-		if ((utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".txt")) || (!utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".msi"))) && fileInfo.ModTime().UnixMilli() <= limitDate {
+		if ((utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".txt")) || (!utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".msi")) || (!utils.IsTestEnv() && strings.HasSuffix(fileInfo.Name(), ".tar.gz"))) && fileInfo.ModTime().UnixMilli() <= limitDate {
 			wg.Add(1)
 			filesDeleted++
 			go func() {

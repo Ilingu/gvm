@@ -4,8 +4,9 @@ Copyright © 2022 NAME HERE <EMAIL ADDRESS>
 package manager
 
 import (
-	"gvm-windows/gvm"
-	"log"
+	"fmt"
+	"gvm/console"
+	"gvm/gvm/core"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -17,14 +18,14 @@ var scanCmd = &cobra.Command{
 	Short: "➡️ Scan and delete old downloaded Go MSI file",
 	Long:  `➡️ Scan and delete old downloaded Go MSI file based on the file creation date.`,
 	Run: func(cmd *cobra.Command, args []string) {
-		log.Println("Scanning... ⏳")
-		filesDeleted, err := gvm.ScanAndDelete(limitDate)
+		console.Log("Scanning... ⏳")
+		filesDeleted, err := core.ScanAndDelete(limitDate)
 		if err != nil {
-			log.Println("❌ Scanning failed!")
+			console.Error("❌ Scanning failed!")
 			return
 		}
 
-		log.Printf("✅ Scanning completed! %d files deleted.", filesDeleted)
+		console.Success(fmt.Sprintf("✅ Scanning completed! %d files deleted.", filesDeleted))
 	},
 }
 
