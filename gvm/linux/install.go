@@ -42,10 +42,7 @@ func (it LinuxInstaller) Install() error {
 	}
 
 	if !exist {
-		console.Log("🔎 Setting Path...")
-		if err := exec.Command("export", "PATH=$PATH:/usr/local/go/bin").Run(); err != nil {
-			return errors.New("couldn't export path")
-		}
+		console.Neutral("Please run `export PATH=$PATH:/usr/local/go/bin`")
 	}
 
 	console.Log("⏳ Checking installation...")

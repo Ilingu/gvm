@@ -10,6 +10,10 @@ blinux:
 	set GOOS=linux&& set GOARCH=amd64&& set CGO_ENABLED=0 && go build -o gvm-linux .
 	@echo Done!
 
+setbin: build
+	sudo cp gvm-linux /bin
+	sudo mv /bin/gvm-linux /bin/gvm
+
 test_switch: build
 	gvm switch latest
 
